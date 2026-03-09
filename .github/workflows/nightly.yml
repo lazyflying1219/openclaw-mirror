@@ -22,6 +22,14 @@
 name: 最新版构建 (Nightly)
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'docker/**'
+      - '.github/workflows/build-core.yml'
+      - '.github/workflows/nightly.yml'
   schedule:
     # 每小时42分构建（错峰避免冲突）
     - cron: '42 * * * *'
@@ -88,7 +96,7 @@ jobs:
   # ==================== 调用核心构建 ====================
   build:
     needs: check-upstream
-    if: needs.check-upstream.outputs.has_changes == 'true' || github.event.inputs.force_build == 'true'
+    if: github.event_name == 'push' || needs.check-upstream.outputs.has_changes == 'true' || github.event.inputs.force_build == 'true'
     uses: ./.github/workflows/build-core.yml
     with:
       version_type: nightly
@@ -332,7 +340,7 @@ jobs:
   # ==================== 无变更时的摘要 ====================
   skip-summary:
     needs: check-upstream
-    if: needs.check-upstream.outputs.has_changes == 'false' && github.event.inputs.force_build != 'true'
+    if: github.event_name != 'push' && needs.check-upstream.outputs.has_changes == 'false' && github.event.inputs.force_build != 'true'
     runs-on: ubuntu-latest
     
     steps:

@@ -722,3 +722,12 @@ npm install -g @qingchencloud/openclaw-updater
 <p align="right"><a href="#top">回到顶部</a></p>
 
 <!-- AI Translation Tools: Claude, Copilot, Codex, Devin, Amazon Q, CodeRabbit -->
+## HF Space 持久化建议
+
+如果你的运行环境磁盘是临时的，建议采用双层方案：
+
+- **系统镜像 / Docker**：使用本仓库 `openclaw-mirror`
+- **个人 workspace 数据**：使用独立备份仓库（例如 `openclaw-backup`）
+
+本仓库的 Docker 镜像已支持启动前按环境变量自动恢复 `/root/.openclaw/workspace`。
+详细变量和示例见 `DOCKER_README.md`。

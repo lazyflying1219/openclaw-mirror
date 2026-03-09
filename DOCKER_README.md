@@ -65,3 +65,44 @@ volumes:
 ---
 
 **武汉晴辰天下网络科技有限公司** | [qingchencloud.com](https://qingchencloud.com/)
+
+---
+
+## HF Space / 临时磁盘场景：启动时自动恢复 workspace
+
+如果运行环境不能持久化 `/root/.openclaw/workspace`（例如某些 HF Space 场景），可以把**系统镜像**和**个人 workspace**分开：
+
+- **系统级镜像 / Docker 构建**：由本仓库 `openclaw-mirror` 负责
+- **个人 workspace 备份**：由单独的备份仓库（例如 `openclaw-backup`）负责
+
+本镜像现在支持在启动前自动尝试从备份仓库恢复 workspace。
+
+### 需要的环境变量
+
+```bash
+OPENCLAW_BACKUP_REPO=owner/repo
+OPENCLAW_BACKUP_GITHUB_TOKEN=ghp_xxx   # 私有仓库需要；公开仓库可省略
+OPENCLAW_BACKUP_BRANCH=main            # 可选，默认 main
+OPENCLAW_BACKUP_RESTORE_MODE=if-empty  # off | if-empty | always
+OPENCLAW_BACKUP_SNAPSHOT=latest        # 可选，默认 latest
+```
+
+### 行为说明
+
+- `if-empty`：只有在 `/root/.openclaw/workspace` 看起来还没初始化时才恢复
+- `always`：每次启动都先覆盖恢复
+- `off`：禁用自动恢复
+- 默认会用 `manifests/<snapshot>.sha256` 做校验；如需跳过，可设置 `OPENCLAW_BACKUP_RESTORE_NO_VERIFY=1`
+- 若希望恢复失败时直接让容器启动失败，可设置 `OPENCLAW_BACKUP_RESTORE_STRICT=1`
+
+### Docker Compose 示例
+
+```yaml
+environment:
+  - OPENCLAW_BACKUP_REPO=lazyflying1219/openclaw-backup
+  - OPENCLAW_BACKUP_GITHUB_TOKEN=${OPENCLAW_BACKUP_GITHUB_TOKEN}
+  - OPENCLAW_BACKUP_BRANCH=main
+  - OPENCLAW_BACKUP_RESTORE_MODE=if-empty
+```
+
+这样做的结果是：镜像更新继续走本仓库，个人 workspace 则从备份仓库恢复，二者互不混淆。

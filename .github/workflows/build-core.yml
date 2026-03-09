@@ -269,9 +269,12 @@ jobs:
 
       - name: 准备 Docker 构建
         run: |
-          # 复制 Dockerfile 和 .dockerignore 到构建目录
+          # 复制 Dockerfile、.dockerignore 和运行时钩子到构建目录
           cp Dockerfile openclaw/Dockerfile
           cp .dockerignore openclaw/.dockerignore 2>/dev/null || true
+          mkdir -p openclaw/docker-hooks
+          cp docker/*.sh openclaw/docker-hooks/
+          chmod +x openclaw/docker-hooks/*.sh
           
           # 验证构建产物存在
           echo "📦 检查构建产物..."

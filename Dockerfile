@@ -26,6 +26,7 @@ ENV CHROME_BIN=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV NODE_ENV=production
+ENV OPENCLAW_BACKUP_RESTORE_MODE=if-empty
 
 # 安装运行时依赖（使用 cache-mount 加速 apt）
 # 这一层变化频率低，会被缓存
@@ -52,6 +53,10 @@ RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     npm rebuild || true && \
     npm install --prefer-offline --no-audit --omit=dev || true
 
+# 安装运行时恢复钩子
+COPY docker-hooks/ /usr/local/lib/openclaw/
+RUN chmod +x /usr/local/lib/openclaw/*.sh
+
 # 全局安装
 RUN npm install -g . --omit=dev
 
@@ -67,6 +72,9 @@ VOLUME ["/root/.openclaw"]
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:18789/health || exit 1
+
+# 启动前先尝试恢复 workspace
+ENTRYPOINT ["/usr/local/lib/openclaw/openclaw-entrypoint.sh"]
 
 # 默认启动命令
 CMD ["openclaw"]
